@@ -1,0 +1,115 @@
+<html>
+	<head>
+		<style>
+			body {
+				box-sizing: border-box;
+				background: black;
+				color: :#bbb;
+				margin: 0;
+				padding: 0;
+				display: flex;
+				justify-content: center;
+				align-items: center;
+				min-height: 100vh;
+			}
+			main {
+
+			}
+			canvas {
+				background: #111;
+				border: 1px solid #000;
+			}
+		</style>
+		<script src="audio-system.js"></script>
+		<script src="visualization-system.js"></script>
+	</head>
+	<body>
+		<main>
+			<canvas width="500" height="100" id="oscilloscope"></canvas>
+			<br>
+			<canvas width="500" height="100" id="bar-analyzer"></canvas>
+			<br>
+			<canvas width="500" height="100" id="analyzer"></canvas>
+		</main>
+		<script>
+			const patchDataSerialized = {
+				version: "0.0.1",
+				nodes: [
+					{
+						id: "1",
+						type: "oscillator",
+						position: [0, 0, 0], // X, Y, Z
+					}
+				]
+			};
+
+			//die();
+
+			// Initialize the audio context
+			const AudioContext = window.AudioContext || window.webkitAudioContext;
+			const actx = new AudioContext();
+
+			// Create the audio out interface
+			const audioOut = new AudioOutput(actx);
+
+			// Create an AUDIO oscillator
+			const osc1 = new Oscillator(actx);
+			osc1.setFrequency(0)
+			osc1.outputs.main.connect(audioOut.inputs.main);
+
+			// Create an LFO
+			const osc2 = new Oscillator(actx);
+			osc2.setFrequency(0.1)
+			osc2.setGain(3000)
+			osc2.outputs.main.connect(osc1.inputs.frequency);
+
+			const osc3 = new Oscillator(actx);
+			osc3.setFrequency(0.07)
+			osc3.setGain(200000)
+			osc3.outputs.main.connect(osc2.inputs.frequency)
+
+
+			const drawScope = initScope(actx, osc1.gainNode, document.getElementById("oscilloscope"));
+			const drawBarAnalyzer = initBarAnalyzer(actx, osc1.gainNode, document.getElementById("bar-analyzer"));
+			const drawAnalyzer = initAnalyzer(actx, osc1.gainNode, document.getElementById("analyzer"));
+
+			let running = 1;
+			//setTimeout(() => {running=0}, 2000);
+
+			function draw() {
+				if (!running) {
+					return;
+				}
+
+				drawScope();
+				drawBarAnalyzer();
+				drawAnalyzer();
+				requestAnimationFrame(draw);
+			}
+
+			draw();
+
+		</script>
+	</body>
+</html>
+
+<!--
+
+var startTest = function(){
+    mod = context.createOscillator();
+    mod.frequency.value = 8;
+    
+    modGain = context.createGain();
+    modGain.gain.value = 30;
+    
+    osc = context.createOscillator();
+    osc.frequency.value = 300;
+    
+    mod.connect(modGain);
+    modGain.connect(osc.frequency);
+    osc.connect(out);
+
+    osc.start(0);
+    mod.start(0);
+};
+-->
